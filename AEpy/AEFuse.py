@@ -39,6 +39,16 @@ class AEFuse(Operations):
         self.writeattrs = None
 
 
+    def _mode_to_arwed(self, mode):
+        amigaattrs = 0
+
+        if not mode & S_IRUSR: amigaattrs |= 0x08
+        if not mode & S_IWUSR: amigaattrs |= 0x04
+        if not mode & S_IXUSR: amigaattrs |= 0x02
+
+        return amigaattrs
+
+
     def getattr(self, path, fh=None):
         print('AEFuse.getattr: ' + path)
 
@@ -223,7 +233,11 @@ class AEFuse(Operations):
             assert path != self.writepath
 
         # Create a dummy file, so the path exists
-        AECmds.file_write(self.session, path[1:].encode(amiga_charset), 0, time(), b'')
+        AECmds.file_write(self.session,
+                          path[1:].encode(amiga_charset),
+                          self._mode_to_arwed(mode),
+                          time(),
+                          b'')
 
         # Refresh cache so a subsequent getattr() succeeds
         dirpath = path[0:path.rfind('/')]
@@ -286,7 +300,8 @@ class AEFuse(Operations):
         # Except returning an error on close().
         # But honestly, who checks for that?
         AECmds.file_write(self.session,
-                          self.writepath[1:].encode(amiga_charset), self.writeattrs,
+                          self.writepath[1:].encode(amiga_charset),
+                          self.writeattrs,
                           self.writemtime, self.writebuf)
 
         # Extract dirpath before we throw away self.writepath
@@ -433,16 +448,16 @@ class AEFuse(Operations):
     def chmod(self, path, mode):
         print("AEFuse.chmod: " + path + ' -- ' + str(mode))
 
-        amigaattrs = 0
         # Apparently we don't have to worry about directory flags
-        if not mode & S_IRUSR: amigaattrs |= 0x08
-        if not mode & S_IWUSR: amigaattrs |= 0x04
-        if not mode & S_IXUSR: amigaattrs |= 0x02
+        amigaattrs = self._mode_to_arwed(mode)
 
-        AECmds.setattr(self.session,
-                       amigaattrs,
-                       path[1:].encode(amiga_charset),
-                       '')
+        if path == self.writepath:
+            self.writeattrs = amigaattrs;
+        else:
+            AECmds.setattr(self.session,
+                           amigaattrs,
+                           path[1:].encode(amiga_charset),
+                           '')
 
 
     def chown(self, path, uid, gid):
