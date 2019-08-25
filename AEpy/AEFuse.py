@@ -462,7 +462,8 @@ class AEFuse(Operations):
 
     def chown(self, path, uid, gid):
         # AmigaOS does not know users/groups.
-        raise FuseOSError(EROFS)
+        # Pretend it does, to keep cp from spamming stderr.
+        pass
 
 
     # Called on umount
