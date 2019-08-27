@@ -1,38 +1,50 @@
+Overview
+========
+
+The AE protocol works by exchanging messages between the Amiga and the Client (e.g. an IBM PC).
+
+Each message consists of a header and optionally payload data. Both parts carry CRC32 checksums
+to ensure data integrity. 
+
+Message header
+--------------
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| TODO           |                              |
+
 Message types
-==============
+=============
 
-     Msg ID | Sending side | Description
-    --------|--------------|----------------------------------
-         00 | Ami/PC       | Ask for next block
-         01 | Ami/PC       | Transfer cancelled
-         02 | Ami/PC       | Initialisation / Init response
-         03 | Ami/?        | Multipart header
-         04 | Amiga        | EOF (no payload)
-         05 | Amiga        | Next data block
+| Msg  | ID                | Sending side | Description                                               |
+| ---- | ----------------- | ------------ | --------------------------------------------------------- |
+| 0x00 | MSG_NEXT_PART     | Amiga/Client | Ask for next block                                        |
+| 0x01 |                   | Amiga/Client | Transfer cancelled                                        |
+| 0x02 | MSG_INIT          | Amiga/Client | Initialisation / Init response                            |
+| 0x03 | MSG_MPARTH        | Amiga/?      | Multipart header                                          |
+| 0x04 | MSG_EOF           | Amiga        | EOF (no payload)                                          |
+| 0x05 | MSG_BLOCK         | Amiga        | Next data block                                           |
+|      |                   |              |                                                           |
+| 0x08 | MSG_EXISTS        | Amiga        | File already exists (when trying to write with 0x66)      |
+| 0x09 |                   | Amiga        | Size ? (response to 0x6c)                                 |
+| 0x0a | MSG_ACK_CLOSE     | Amiga        | Close response                                            |
+| 0x0b |                   | Amiga        | Format response?                                          |
+|      |                   |              |                                                           |
+| 0x64 |                   | Client       | List directory                                            |
+| 0x65 | MSG_FILE_SEND     | Client       | File read                                                 |
+| 0x66 | MSG_FILE_RECV     | Client       | File/folder write                                         |
+| 0x67 |                   | Client       | File/folder delete (recursively)                          |
+| 0x68 |                   | Client       | File rename (name changes) (works on drives, too?)        |
+| 0x69 |                   | Client       | File move (path changes)                                  |
+| 0x6a |                   | Client       | File copy                                                 |
+| 0x6b |                   | Client       | Set attributes and comment                                |
+| 0x6c |                   | Client       | Request size on disk (?)                                  |
+| 0x6d | MSG_FILE_CLOSE    | Client       | Close file                                                |
+| 0x6e |                   | Client       | Format disk (needs Kickstart 2.0 or newer)                |
+| 0x6f |                   | Client       | New folder                                                |
 
-         08 | Amiga        | File already exists (when trying to write with 0x66)
-	 09 | Amiga        | Size ? (response to 0x6c)
-         0a | Amiga        | Close response
-         0b | Amiga        | Format response?
-
-         64 | PC           | List directory
-         65 | PC           | File read
-         66 | PC           | File/folder write
-         67 | PC           | File/folder delete (recursively)
-         68 | PC           | File rename (name changes) (works on drives, too?)
-         69 | PC           | File move (path changes)
-         6a | PC           | File copy
-         6b | PC           | Set attributes and comment
-         6c | PC           | Request size on disk (?)
-         6d | PC           | Close file
-         6e | PC           | Format disk (needs Kickstart 2.0 or newer)
-         6f | PC           | New folder
-
-
-
-
-Request details
-================
+Message details
+===============
 
 64 - List a directory
 ----------------------
@@ -46,10 +58,24 @@ Request details
 ### TODO ###
 
 
-66 - Write a file
-------------------
+0x66 MSG_FILE_RECV - Write a file (PC -> Amiga)
+-----------------------------------------------
 
-### TODO ###
+Payload:
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| 4              | header size                  |
+| 4              | file size                    |
+| 4              | FIXME ??                     |
+| 4              | Attributes FIXME: encoding ? |
+| 4              | date (hours since 1/1/78)    |
+| 4              | time (mins since midnight)   |
+| 4              | ctime                        |
+| 1              | file type FIXME: encoding?   |
+| header_size-29 | file name                    |
+
+Expected response: 0x00 MSG_NEXT_PART if file does not exist (yet), 0x08 MSG_EXISTS otherwise
 
 
 67 - Delete file/folder
