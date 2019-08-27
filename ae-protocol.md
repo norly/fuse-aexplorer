@@ -11,7 +11,22 @@ Message header
 
 | Bytes          | Content                      |
 | -------------- | ---------------------------- |
-| TODO           |                              |
+| 2              | Msg (see below)              |
+| 2              | Payload length               |
+| 4              | Sequence                     |
+| 4              | CRC32                        |
+
+Payload (if any)
+----------------
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| n              | Payload                      |
+| 4              | CRC32                        |
+
+Each message is acknowledged by the receiving side by a 4-Byte "PkOk" response if the checksum matches.
+
+FIXME: Reply if checksum doesn''t match? Re-sync/recovery?
 
 Message types
 =============
@@ -58,8 +73,8 @@ Message details
 ### TODO ###
 
 
-0x66 MSG_FILE_RECV - Write a file (PC -> Amiga)
------------------------------------------------
+0x66 MSG_FILE_RECV - Write a file (Client -> Amiga)
+---------------------------------------------------
 
 Payload:
 
