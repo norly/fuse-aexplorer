@@ -24,9 +24,10 @@ Payload (if any)
 | n              | Payload                      |
 | 4              | CRC32                        |
 
-Each message is acknowledged by the receiving side by a 4-Byte "PkOk" response if the checksum matches.
+Each message is acknowledged by the receiving side by a 4-Byte "PkOk" response if the checksum matches, "PkRs" otherwise.
 
-FIXME: Reply if checksum doesn''t match? Re-sync/recovery?
+Recovery from checksum errors: on "PkRs" non-ack, the sending side re-sends the whole message until "PkOk" is received.
+FIXME: is this correct?
 
 Message types
 =============
