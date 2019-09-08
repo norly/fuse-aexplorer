@@ -86,6 +86,8 @@ Expected response: 0x00 MSG_NEXT_PART
 
 Payload: none
 
+Expected response: 0x6d MSG_FILE_CLOSE
+
 0x05 MSG_BLOCK - Next data block
 --------------------------------
 
@@ -93,7 +95,7 @@ Payload:
 
 | Bytes          | Content                      |
 | -------------- | ---------------------------- |
-| 4              | length n                     |
+| 4              | offset                       |
 | n              | data                         |
 
 Expected response: 0x00 MSG_NEXT_PART
@@ -160,7 +162,14 @@ Payload:
 | 4              | header size                  |
 | 4              | file size                    |
 | 4              | FIXME ??                     |
-| 4              | Attributes FIXME: encoding ? |
+| 4              | attributes                   |
+|                |   S: 0x40                    |
+|                |   P: 0x20                    |
+|                |   A: 0x10                    |
+|                |   R: 0x08                    |
+|                |   W: 0x04                    |
+|                |   E: 0x02                    |
+|                |   D: 0x01                    |
 | 4              | date (hours since 1/1/78)    |
 | 4              | time (mins since midnight)   |
 | 4              | ctime                        |
