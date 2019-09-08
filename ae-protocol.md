@@ -4,7 +4,7 @@ Overview
 The AE protocol works by exchanging messages between the Amiga and the Client (e.g. an IBM PC).
 
 Each message consists of a header and optionally payload data. Both parts carry CRC32 checksums
-to ensure data integrity. 
+to ensure data integrity.
 
 Message header
 --------------
@@ -73,7 +73,7 @@ Expected repsonse: MSG_BLOCK or MSG_EOF
 0x03 MSG_MPARTH - Multipart header
 ----------------------------------
 
-Payload: 
+Payload:
 
 | Bytes          | Content                      |
 | -------------- | ---------------------------- |
