@@ -46,7 +46,7 @@ Message types
 | 0x0a | MSG_ACK_CLOSE     | Amiga        | Close response                                            |
 | 0x0b |                   | Amiga        | Format response?                                          |
 |      |                   |              |                                                           |
-| 0x64 |                   | Client       | List directory                                            |
+| 0x64 | MSG_DIR           | Client       | List directory                                            |
 | 0x65 | MSG_FILE_SEND     | Client       | File read                                                 |
 | 0x66 | MSG_FILE_RECV     | Client       | File/folder write                                         |
 | 0x67 |                   | Client       | File/folder delete (recursively)                          |
@@ -62,16 +62,92 @@ Message types
 Message details
 ===============
 
-64 - List a directory
-----------------------
+0x00 MSG_NEXT_PART - Ask for next block
+---------------------------------------
 
-### TODO ###
+Payload: none
+
+Expected repsonse: MSG_BLOCK or MSG_EOF
 
 
-65 - Read a file
------------------
+0x03 MSG_MPARTH - Multipart header
+----------------------------------
 
-### TODO ###
+Payload: 
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| 4              | length                       |
+
+Expected response: 0x00 MSG_NEXT_PART
+
+0x04 MSG_EOF
+------------
+
+Payload: none
+
+0x05 MSG_BLOCK - Next data block
+--------------------------------
+
+Payload:
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| 4              | length n                     |
+| n              | data                         |
+
+Expected response: 0x00 MSG_NEXT_PART
+
+0x64 MSG_DIR - List a directory (Client -> Amiga)
+-------------------------------------------------
+
+Payload:
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| n              | path                         |
+| 1              | 0                            |
+| 1              | 1 FIXME ??                   |
+
+Expected response: 0x03 MSG_MPARTH if path exists, MSG_EOF otherwise
+
+Multipart data will be polled in chunks using MSG_NEXT_PART. This data is structured as follows:
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| 4              | number of entries            |
+| n              | dir entries                  |
+
+Each dir entry is structured as follows:
+
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| 4              | len (29+n+m)                 |
+| 4              | size                         |
+| 4              | used                         |
+| 2              | type (0: file, 0x8000: dir)  |
+| 2              | attributes                   |
+|                |   S: 0x40                    |
+|                |   P: 0x20                    |
+|                |   A: 0x10                    |
+|                |   R: 0x08                    |
+|                |   W: 0x04                    |
+|                |   E: 0x02                    |
+|                |   D: 0x01                    |
+| 4              | date                         |
+| 4              | time                         |
+| 4              | ctime                        |
+| 1              | type2 FIXME: ???             |
+| n              | name\0                       |
+| m              | comment\0                    |
+
+
+0x65 MSG_FILE_SEND - Read a file
+--------------------------------
+
+Payload: filename\0
+
+Expected response: 0x08 MSG_EXISTS if file cannot be opened, 0x03 MSG_MPARTH otherwise
 
 
 0x66 MSG_FILE_RECV - Write a file (Client -> Amiga)
