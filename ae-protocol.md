@@ -127,7 +127,7 @@ Each dir entry is structured as follows:
 | 4              | len (29+n+m)                 |
 | 4              | size                         |
 | 4              | used                         |
-| 2              | type (0: file, 0x8000: dir)  |
+| 2              | type FIXME ???               |
 | 2              | attributes                   |
 |                |   S: 0x40                    |
 |                |   P: 0x20                    |
@@ -139,7 +139,7 @@ Each dir entry is structured as follows:
 | 4              | date                         |
 | 4              | time                         |
 | 4              | ctime                        |
-| 1              | type2 FIXME: ???             |
+| 1              | type2 (0x00 file, 0x02 dir)  |
 | n              | name\0                       |
 | m              | comment\0                    |
 
