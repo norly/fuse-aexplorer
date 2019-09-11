@@ -78,6 +78,7 @@ Payload:
 | Bytes          | Content                      |
 | -------------- | ---------------------------- |
 | 4              | length                       |
+| 4              | 0x000002000 FIXME ??         |
 
 Expected response: 0x00 MSG_NEXT_PART
 
@@ -111,9 +112,9 @@ Payload:
 | 1              | 0                            |
 | 1              | 1 FIXME ??                   |
 
-Expected response: 0x03 MSG_MPARTH if path exists, MSG_EOF otherwise
+Expected response: 0x03 MSG_MPARTH if path exists, 0x04 MSG_EOF otherwise
 
-Multipart data will be polled in chunks using MSG_NEXT_PART. This data is structured as follows:
+Multipart data will be polled in chunks using 0x00 MSG_NEXT_PART. This data is structured as follows:
 
 | Bytes          | Content                      |
 | -------------- | ---------------------------- |
