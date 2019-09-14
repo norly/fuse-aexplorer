@@ -48,8 +48,8 @@ Message types
 |      |                   |              |                                                           |
 | 0x64 | MSG_DIR           | Client       | List directory                                            |
 | 0x65 | MSG_FILE_SEND     | Client       | File read                                                 |
-| 0x66 | MSG_FILE_RECV     | Client       | File/folder write                                         |
-| 0x67 |                   | Client       | File/folder delete (recursively)                          |
+| 0x66 | MSG_FILE_RECV     | Client       | File/dir write                                            |
+| 0x67 | MSG_FILE_DELETE   | Client       | File/dir delete (recursively )                            |
 | 0x68 |                   | Client       | File rename (name changes) (works on drives, too?)        |
 | 0x69 |                   | Client       | File move (path changes)                                  |
 | 0x6a |                   | Client       | File copy                                                 |
@@ -57,7 +57,7 @@ Message types
 | 0x6c |                   | Client       | Request size on disk (?)                                  |
 | 0x6d | MSG_FILE_CLOSE    | Client       | Close file                                                |
 | 0x6e |                   | Client       | Format disk (needs Kickstart 2.0 or newer)                |
-| 0x6f |                   | Client       | New folder                                                |
+| 0x6f |                   | Client       | New directory                                             |
 
 Message details
 ===============
@@ -174,30 +174,36 @@ Payload:
 | 4              | date (hours since 1/1/78)    |
 | 4              | time (mins since midnight)   |
 | 4              | ctime                        |
-| 1              | file type FIXME: encoding?   |
+| 1              | file type                    |
+|                |   2: directory               |
+|                |   3: regular file            |
 | header_size-29 | file name                    |
 
-Expected response: 0x00 MSG_NEXT_PART if file does not exist (yet), 0x08 MSG_EXISTS otherwise
+Expected response: 0x00 MSG_NEXT_PART if file does not exist (yet), 0x08
+MSG_EXISTS otherwise. 
 
+If this is a regular file, file contents will be transferred using 0x03
+MSG_MPARTH/0x05 MSG_BLOCK. Once file is transferred completely, 0x6d
+MSG_FILE_CLOSE will be sent by the client. If this is a directory, 0x6d
+MSG_FILE_CLOSE will be sent by the client right away.
 
-67 - Delete file/folder
-------------------------
+0x67 MSG_FILE_DELETE - File/dir delete (recursively)
+----------------------------------------------------
 
 Payload:
 
-     Bytes | Content
-    -------|--------------------
-         n | Path
-         1 | 0x00
+| Bytes          | Content                      |
+| -------------- | ---------------------------- |
+| n              | Path                         |
+| 1              | 0x00                         |
 
-Then, read type 0 for confirmation.
-Then, sendClose() (0xa response: 5x 00).
+Expected response: 0x00 MSG_NEXT_PART. Then, 0xa MSG_FILE_CLOSE.
 
-If Path is a folder, it will be deleted together with its contents.
+If Path is a dir, it will be deleted together with its contents.
 
 
-68 - Rename file/folder
-------------------------
+68 - Rename file/dir
+--------------------
 
 Payload:
 
@@ -212,8 +218,8 @@ Then, read type 0 for confirmation.
 Then, sendClose() (0xa response: 5x 00).
 
 
-69 - Move file/folder
-----------------------
+69 - Move file/dir
+------------------
 
 Payload:
 
@@ -221,19 +227,19 @@ Payload:
     -------|--------------------
          n | Path (including old file name)
          1 | 0x00
-         n | New path to contain file (folder without trailing slash or file name)
+         n | New path to contain file (dir without trailing slash or file name)
          1 | 0x00
 	 1 | 0xc9 (?)
 
 Then, read type 0 for confirmation.
 Then, sendClose() (0xa response: 5x 00).
 
-If Path is a folder, it will be moved together with its contents.
+If Path is a directory, it will be moved together with its contents.
 This command appears to work across devices.
 
 
-6a - Copy file/folder
-----------------------
+6a - Copy file/dir
+------------------
 
 Payload:
 
@@ -241,14 +247,14 @@ Payload:
     -------|--------------------
          n | Path (including old file name)
          1 | 0x00
-         n | New path to contain file (folder without trailing slash or file name)
+         n | New path to contain file (dir without trailing slash or file name)
          1 | 0x00
 	 1 | 0xc9 (?)
 
 Then, read type 0 for confirmation.
 Then, sendClose() (0xa response: 5x 00).
 
-If Path is a folder, it will be moved together with its contents.
+If Path is a directory, it will be copied together with its contents.
 This command appears to work across devices.
 
 
@@ -296,12 +302,12 @@ Then, sendClose() (0xa response: 5x 00).
 
 
 
-6d - Close file
-----------------
+0x6d MSG_FILE_CLOSE - Close file
+--------------------------------
 
 No payload.
 
-Then, read type 0x0a for confirmation (typical payload: 5 bytes of 0x00).
+Then, read type 0x0a MSG_ACK_CLOSE for confirmation (typical payload: 5 bytes of 0x00).
 
 This is used to finish an operation, such as a directory listing
 or renaming a file.
@@ -313,8 +319,8 @@ or renaming a file.
 ### TODO ###
 
 
-6f - New folder
-----------------
+6f - New directory
+------------------
 
 Payload:
 
@@ -326,9 +332,10 @@ Payload:
 Then, read type 0 for confirmation.
 Then, sendClose() (0xa response: 5x 00).
 
-The host will create a new folder in the given path, together with a
+The host will create a new directory in the given path, together with a
 matching .info file.
-The folder name cannot be chosen, and will be something like "Unnamed1".
+The directory name cannot be chosen, and will be something like "Unnamed1".
 
-To create a folder with a specific name, use 0x66.
-Note that 0x66'ing a folder does not seem to set its time.
+To create a directory with a specific name, use 0x66.
+Note that 0x66'ing a directory does not seem to set its time.
+
