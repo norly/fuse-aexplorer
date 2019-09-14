@@ -41,7 +41,7 @@ Message types
 | 0x04 | MSG_EOF           | Amiga        | EOF (no payload)                                          |
 | 0x05 | MSG_BLOCK         | Amiga        | Next data block                                           |
 |      |                   |              |                                                           |
-| 0x08 | MSG_EXISTS        | Amiga        | File already exists (when trying to write with 0x66)      |
+| 0x08 | MSG_IOERR         | Amiga        | File already exists (when trying to write with 0x66)      |
 | 0x09 |                   | Amiga        | Size ? (response to 0x6c)                                 |
 | 0x0a | MSG_ACK_CLOSE     | Amiga        | Close response                                            |
 | 0x0b |                   | Amiga        | Format response?                                          |
@@ -101,6 +101,14 @@ Payload:
 
 Expected response: 0x00 MSG_NEXT_PART
 
+0x08 MSG_IOERR - I/O Error
+--------------------------
+
+Payload: none
+
+Sent in response to various commands if operation could not be completed
+or if file already exists (when trying to write with 0x66 MSG_FILE_RECV).
+
 0x64 MSG_DIR - List a directory (Client -> Amiga)
 -------------------------------------------------
 
@@ -150,7 +158,7 @@ Each dir entry is structured as follows:
 
 Payload: filename\0
 
-Expected response: 0x08 MSG_EXISTS if file cannot be opened, 0x03 MSG_MPARTH otherwise
+Expected response: 0x08 MSG_IOERR if file cannot be opened, 0x03 MSG_MPARTH otherwise
 
 
 0x66 MSG_FILE_RECV - Write a file (Client -> Amiga)
@@ -180,7 +188,7 @@ Payload:
 | header_size-29 | file name                    |
 
 Expected response: 0x00 MSG_NEXT_PART if file does not exist (yet), 0x08
-MSG_EXISTS otherwise. 
+MSG_IOERR otherwise. 
 
 If this is a regular file, file contents will be transferred using 0x03
 MSG_MPARTH/0x05 MSG_BLOCK. Once file is transferred completely, 0x6d
