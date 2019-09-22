@@ -53,7 +53,7 @@ Message types
 | 0x68 | MSG_FILE_RENAME   | Client       | File/dir rename                                           |
 | 0x69 | MSG_FILE_MOVE     | Client       | File move (path changes)                                  |
 | 0x6a | MSG_FILE_COPY     | Client       | File copy                                                 |
-| 0x6b |                   | Client       | Set attributes and comment                                |
+| 0x6b | MSG_FILE_ATTR     | Client       | Set attributes and comment                                |
 | 0x6c |                   | Client       | Request size on disk (?)                                  |
 | 0x6d | MSG_FILE_CLOSE    | Client       | Close file                                                |
 | 0x6e |                   | Client       | Format disk (needs Kickstart 2.0 or newer)                |
@@ -250,13 +250,13 @@ This command appears to work across devices.
 
 Payload:
 
-| Bytes          | Content                                                            |
-| -------------- | ------------------------------------------------------------------ |
-| n              | Path (including old file name)                                     |
-| 1              | 0x00                                                               |
-| m              | New path to contain file (dir without trailing slash or file name) |
-| 1              | 0x00                                                               |
-| 1              | 0xc9 FIXME (?)                                                     |
+| Bytes  | Content                                                            |
+| ------ | ------------------------------------------------------------------ |
+| n      | Path (including old file name)                                     |
+| 1      | 0x00                                                               |
+| m      | New path to contain file (dir without trailing slash or file name) |
+| 1      | 0x00                                                               |
+| 1      | 0xc9 FIXME (?)                                                     |
 
 Expected response: 0x00 MSG_NEXT_PART. Then, send 0x6d MSG_FILE_CLOSE (0xa response: 5x 00).
 
@@ -264,22 +264,21 @@ If Path is a directory, it will be copied together with its contents.
 This command appears to work across devices.
 
 
-6b - Set attributes and comment
---------------------------------
+0x6b MSG_FILE_ATTR - Set attributes and comment
+-----------------------------------------------
 
 Payload:
 
-     Bytes | Content
-    -------|--------------------
-         4 | Attributes
-         n | Path
-         1 | 0x00
-         n | Comment
-         1 | 0x00
-         4 | Checksum? (seems to be 0x00000000 if comment empty)
+| Bytes | Content                                                            |
+| ----- | ------------------------------------------------------------------ |
+| 4     | Attributes                                                         |
+| n     | Path                                                               |
+| 1     | 0x00                                                               |
+| m     | Comment                                                            |
+| 1     | 0x00                                                               |
+| 4     | Checksum? (seems to be 0x00000000 if comment empty) FIXME          |
 
-Then, read type 0 for confirmation.
-Then, sendClose() (0xa response: 5x 00).
+Expected response: 0x00 MSG_NEXT_PART. Then, send 0x6d MSG_FILE_CLOSE (0xa response: 5x 00).
 
 
 6c - Request size on disk (?)
