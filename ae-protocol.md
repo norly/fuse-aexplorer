@@ -51,7 +51,7 @@ Message types
 | 0x66 | MSG_FILE_RECV     | Client       | File/dir write                                            |
 | 0x67 | MSG_FILE_DELETE   | Client       | File/dir delete (recursively )                            |
 | 0x68 | MSG_FILE_RENAME   | Client       | File/dir rename                                           |
-| 0x69 |                   | Client       | File move (path changes)                                  |
+| 0x69 | MSG_FILE_MOVE     | Client       | File move (path changes)                                  |
 | 0x6a |                   | Client       | File copy                                                 |
 | 0x6b |                   | Client       | Set attributes and comment                                |
 | 0x6c |                   | Client       | Request size on disk (?)                                  |
@@ -226,21 +226,20 @@ Expected response: 0x00 MSG_NEXT_PART.  Then, send 0x6d MSG_FILE_CLOSE.
 
 Seems to work on volumes (disk rename), too.
 
-69 - Move file/dir
-------------------
+0x69 MSG_FILE_MOVE - File move (path changes)
+---------------------------------------------
 
 Payload:
 
-     Bytes | Content
-    -------|--------------------
-         n | Path (including old file name)
-         1 | 0x00
-         n | New path to contain file (dir without trailing slash or file name)
-         1 | 0x00
-	 1 | 0xc9 (?)
+| Bytes          | Content                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| n              | Path (including old file name)                                     |
+| 1              | 0x00                                                               |
+| m              | New path to contain file (dir without trailing slash or file name) |
+| 1              | 0x00                                                               |
+| 1              | 0xc9 FIXME (?)                                                     |
 
-Then, read type 0 for confirmation.
-Then, sendClose() (0xa response: 5x 00).
+Expected response: 0x00 MSG_NEXT_PART.  Then, send 0x6d MSG_FILE_CLOSE (0xa response: 5x 00).
 
 If Path is a directory, it will be moved together with its contents.
 This command appears to work across devices.
